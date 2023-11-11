@@ -8,11 +8,11 @@ class ProductoDAO
     {
         $this->pdo = $pdo;
     }
-    public function crearProducto($nombre, $sector)
+    public function crearProducto($idPedido, $nombre, $tiempoEstimado, $tiempoDeEntrega, $precio, $estado, $sector)
     {
         try {
-            $stmt = $this->pdo->prepare("INSERT INTO productos (nombre, sector) VALUES (?, ?)");
-            $stmt->execute([strtolower($nombre), strtoupper($sector)]);
+            $stmt = $this->pdo->prepare("INSERT INTO productos (idPedido, nombre, tiempoEstimado, tiempoDeEntrega, precio, estado, sector) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$idPedido, $nombre, $tiempoEstimado, $tiempoDeEntrega, $precio, $estado, $sector]);
             return $this->pdo->lastInsertId();
         } catch (PDOException $e) {
             echo 'Error al insertar producto: ' . $e->getMessage();
