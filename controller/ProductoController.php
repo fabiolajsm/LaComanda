@@ -2,7 +2,7 @@
 use \Slim\Http\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 
-require_once 'ProductoDAO.php';
+require_once '../dao/ProductoDAO.php';
 
 class ProductoController
 {

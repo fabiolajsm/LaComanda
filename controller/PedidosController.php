@@ -3,7 +3,7 @@
 use \Slim\Http\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 
-require_once 'PedidosDAO.php';
+require_once '../dao/PedidosDAO.php';
 
 class PedidosController
 {
@@ -22,8 +22,8 @@ class PedidosController
         $estado = $data['estado'] ?? "";
         $tiempoEstimado = $data['tiempoEstimado'] ?? "";
         $tiempoDeEntrega = $data['tiempoDeEntrega'] ?? null;
-        $fotoDeLaMesa = $_FILES['fotoDeLaMesa']['tmp_name'] ?? null;
-        echo json_encode($_FILES['fotoDeLaMesa']) . ' file foto';
+        $fotoDeLaMesa = $_FILES['fotoDeLaMesa']['full_path'] ?? null;
+
         if (empty($idCliente) || empty($codigoMesa) || empty($estado) || empty($tiempoEstimado)) {
             return $response->withStatus(400)->withJson(['error' => 'Completar datos obligatorios: idCliente, codigoMesa, estado y tiempoEstimado.']);
         }
@@ -54,7 +54,7 @@ class PedidosController
             }
         }
 
-        $idPedido = $this->pedidosDAO->crearPedido($idCliente, $codigoMesa, $estado, $tiempoEstimado, $tiempoDeEntrega, file_get_contents($fotoDeLaMesa));
+        $idPedido = $this->pedidosDAO->crearPedido($idCliente, $codigoMesa, $estado, $tiempoEstimado, $tiempoDeEntrega, json_encode($fotoDeLaMesa));
         if ($idPedido) {
             return $response->withStatus(201)->withJson(['message' => 'Pedido creado', 'id' => $idPedido]);
         } else {
