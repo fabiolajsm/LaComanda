@@ -3,14 +3,14 @@
 error_reporting(-1);
 ini_set('display_errors', 1);
 
-require '../dao/UsuarioDAO.php';
-require_once '../controller/UsuarioController.php';
-require '../dao/ProductoDAO.php';
-require_once '../controller/ProductoController.php';
-require '../dao/MesasDAO.php';
-require_once '../controller/MesasController.php';
-require '../dao/PedidosDAO.php';
-require_once '../controller/PedidosController.php';
+require './dao/UsuarioDAO.php';
+require_once './controller/UsuarioController.php';
+require './dao/ProductoDAO.php';
+require_once './controller/ProductoController.php';
+require './dao/MesasDAO.php';
+require_once './controller/MesasController.php';
+require './dao/PedidosDAO.php';
+require_once './controller/PedidosController.php';
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;

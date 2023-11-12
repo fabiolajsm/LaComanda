@@ -2,7 +2,7 @@
 use \Slim\Http\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 
-require_once '../dao/MesasDAO.php';
+require_once './dao/MesasDAO.php';
 
 class MesasController
 {

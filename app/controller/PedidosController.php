@@ -3,7 +3,7 @@
 use \Slim\Http\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 
-require_once '../dao/PedidosDAO.php';
+require_once './dao/PedidosDAO.php';
 
 class PedidosController
 {
