@@ -13,7 +13,7 @@ class PedidosController
     {
         $this->pedidosDAO = $pedidosDAO;
     }
-
+    // ABM
     public function crearPedido(ServerRequest $request, ResponseInterface $response)
     {
         $data = $request->getParsedBody();
@@ -34,6 +34,9 @@ class PedidosController
         if (!is_numeric($codigoMesa)) {
             return $response->withStatus(400)->withJson(['error' => 'El código de la mesa debe ser un número válido.']);
         }
+        if (!$this->pedidosDAO->codigoDeMesaExisteEnBD($codigoMesa)) {
+            return $response->withStatus(400)->withJson(['error' => 'El código de mesa no existe']);
+        }
         $estado = strtoupper($estado);
         if (!in_array($estado, $estadosPermitidos)) {
             return $response->withStatus(400)->withJson(['error' => 'Estado incorrecto. Debe ser de tipo: PENDIENTE, PROCESO ó FINALIZADO']);
@@ -45,18 +48,27 @@ class PedidosController
             }
         }
         if (!is_array($productos)) {
-            return $response->withStatus(400)->withJson(['error' => 'El parámetro productos debe ser una lista de productos, con su idProducto, cantidad, tiempo estimado y de entrega(opcional) Ejemplo: [{id: 1, cantidad: 2, tiempoEstimado: 15, tiempoDeEntrega: 20}].']);
+            return $response->withStatus(400)->withJson(['error' => 'El parámetro productos debe ser una lista de productos, con su idProducto, cantidad y tiempo de entrega(opcional) Ejemplo: [{id: 1, cantidad: 2, tiempoDeEntrega: 20}].']);
         }
-        $tiempoEstimado = 0;
+        $tiempoEstimado = 0; // cambiar por el ue vien en el prodcuto
+        $maxTiempoEstimado = 0;
         $productos = json_decode($data['productos'], true);
         foreach ($productos as $productoData) {
             $esProductoValido = $this->esProductoValido($productoData);
             if (is_string($esProductoValido)) {
                 return $response->withStatus(400)->withJson(['error' => 'Elemento en la lista de productos inválida: ' . $esProductoValido]);
             } else {
-                $tiempoEstimado += $productoData['tiempoEstimado'];
+                $producto = $this->pedidosDAO->obtenerProductoPorId($productoData['idProducto']);
+                if (!$producto) {
+                    return "El producto con id: " . $productoData['idProducto'] . " no existe";
+                }
+                $tiempoEstimado += $producto['tiempoEstimado'];
+                $maxTiempoEstimado = max($maxTiempoEstimado, $producto['tiempoEstimado']);
             }
         }
+        // Usa el tiempo estimado más grande como tiempo estimado final
+        $tiempoEstimado = $maxTiempoEstimado;
+
         if ($tiempoDeEntrega != null && !is_numeric($tiempoDeEntrega)) {
             return $response->withStatus(400)->withJson(['error' => 'El tiempo de entrega debe tener el formato correcto, ej. 10 (10 minutos).']);
         }
@@ -68,36 +80,110 @@ class PedidosController
             return $response->withStatus(500)->withJson(['error' => 'No se pudo crear el pedido']);
         }
     }
-
     private function esProductoValido($productoData)
     {
         // Se espera una lista con el id del producto, cantidad, tiempo estimado y tiempo de entrega(este puede tener valor null) (los tiempos expresados en minutos)
-        // Ejemplo: [{id: 1, cantidad: 2, tiempoEstimado: 15, tiempoDeEntrega: 20}]
+        // Ejemplo: [{idProducto: 1, cantidad: 2, tiempoDeEntrega: 20}]
         $estadosPermitidos = ['PENDIENTE', 'EN PREPARACION', 'FINALIZADO', 'LISTO PARA SERVIR'];
         if (
-            !isset($productoData['idProducto'], $productoData['cantidad'], $productoData['tiempoEstimado'], $productoData['tiempoDeEntrega'], $productoData['estado'])
+            !isset($productoData['idProducto'], $productoData['cantidad'], $productoData['estado'])
         ) {
             return "Tiene que ingresar todos los datos del producto";
         }
         $idProducto = $productoData['idProducto'];
         $cantidad = $productoData['cantidad'];
-        if (!is_numeric($idProducto) || !is_numeric($cantidad) || !is_numeric($productoData['tiempoEstimado']) || !is_numeric($productoData['tiempoDeEntrega']) || !is_string($productoData['estado'])) {
+        if (!is_numeric($idProducto) || !is_numeric($cantidad) || !is_string($productoData['estado'])) {
             return "Tipo de valor ingresado inválido";
+        }
+        if (!$this->pedidosDAO->obtenerProductoPorId($productoData['idProducto'])) {
+            return "El producto con id: " . $idProducto . " no existe";
+        }
+        if (isset($productoData['tiempoDeEntrega']) && (!is_numeric($productoData['tiempoDeEntrega']) && $productoData['tiempoDeEntrega'] < 1)) {
+            return "El tiempo de entrega tiene que ser un número válido mayor a 0";
         }
         $estado = strtoupper($productoData['estado']);
         if (!in_array($estado, $estadosPermitidos)) {
             return 'Estado incorrecto. Debe ser PENDIENTE, EN PREPARACION, LISTO PARA SERVIR ó FINALIZADO.';
         }
-        if ($this->pedidosDAO->productoExisteEnBD($productoData['idProducto']) == false) {
-            return "El producto con id: " . $idProducto . " no existe";
-        }
-        $stock = $this->pedidosDAO->obtenerStockPorIdProducto($productoData['cantidad']);
+        $stock = $this->pedidosDAO->obtenerStockPorIdProducto($idProducto);
         if ($stock < $cantidad) {
             return "No hay stock suficiente del producto con id: " . $idProducto . ". Sólo quedan disponibles: " . $stock . " unidades del producto";
         }
         return true;
     }
 
+    public function borrarPedidoPorId(ServerRequest $request, ResponseInterface $response)
+    {
+        $parametros = $request->getQueryParams();
+        $id = $parametros['id'] ?? null;
+        if ($id == null || !is_string($id)) {
+            return $response->withStatus(404)->withJson(['error' => 'Debe ingresar el ID del pedido que desea borrar.']);
+        }
+        $pedidoExistente = $this->pedidosDAO->obtenerPedidoPorId($id);
+        if (!$pedidoExistente) {
+            return $response->withStatus(404)->withJson(['error' => 'Pedido no encontrado']);
+        }
+        $borrado = $this->pedidosDAO->borrarPedidoPorId($id);
+        if ($borrado) {
+            return $response->withStatus(200)->withJson(['mensaje' => 'Pedido borrado']);
+        } else {
+            return $response->withStatus(500)->withJson(['error' => 'No se pudo borrar el Pedido']);
+        }
+    }
+    public function modificarPedidoPorId(ServerRequest $request, ResponseInterface $response)
+    {
+        $parametros = $request->getParsedBody();
+        $id = $parametros['id'] ?? null;
+        $fotoDeLaMesa = $_FILES['fotoDeLaMesa']['full_path'] ?? null;
+        $tiempoEntrega = $parametros['tiempoEntrega'] ?? null;
+        $estado = $parametros['estado'] ?? null;
+        $estadosPermitidos = ['PENDIENTE', 'EN PREPARACION', 'FINALIZADO', 'LISTO PARA SERVIR'];
+
+        if ($id == null) {
+            return $response->withStatus(404)->withJson(['error' => 'Debe ingresar el ID del pedido que desea modificar.']);
+        }
+        $pedidoExistente = $this->pedidosDAO->obtenerPedidoPorId($id);
+        if (!$pedidoExistente) {
+            return $response->withStatus(404)->withJson(['error' => 'Pedido no encontrado']);
+        }
+        if ($fotoDeLaMesa == null && $tiempoEntrega == null && $estado == null) {
+            return $response->withStatus(404)->withJson(['error' => 'Debe ingresar algun campo que desee modificar. Los campos permitidos para modificar son: fotoDeLaMesa, tiempoEntrega y estado.']);
+        }
+        if ($fotoDeLaMesa !== null) {
+            $imageType = $_FILES['fotoDeLaMesa']['type'];
+            if (stripos($imageType, 'jpg') === false && stripos($imageType, 'jpeg') === false) {
+                return $response->withStatus(400)->withJson(['error' => 'La foto de la mesa debe ser un archivo JPG o JPEG válido.']);
+            }
+        }
+        if ($estado !== null) {
+            $estado = strtoupper($estado);
+        if (!in_array($estado, $estadosPermitidos)) {
+            return $response->withStatus(400)->withJson(['error' => 'Estado incorrecto. Debe ser de tipo: PENDIENTE, PROCESO ó FINALIZADO']);
+        }
+        }
+        if ($tiempoEntrega !== null && (!is_numeric($tiempoEntrega) || $tiempoEntrega < 1)) {
+            return $response->withStatus(400)->withJson(['error' => 'El tiempo de entrega debe estar expresado en minutos y ser un número válido mayor a 0.']);
+        }
+
+        $nuevosDatos = [
+            'ID' => $pedidoExistente['ID'],
+            'idCliente' =>$pedidoExistente['idCliente'],
+            'codigoMesa' => $pedidoExistente['codigoMesa'],
+            'estado' => $estado ?? $pedidoExistente['estado'],
+            'fotoDeLaMesa' => $fotoDeLaMesa ?? $pedidoExistente['fotoDeLaMesa'],
+            'tiempoDeEntrega' => $tiempoEntrega ?? $pedidoExistente['tiempoDeEntrega'],
+            'tiempoEstimado' => $pedidoExistente['tiempoEstimado'],
+            'activo' => $pedidoExistente['activo'],
+        ];
+        $modificado = $this->pedidosDAO->modificarProductoPorId($id, $nuevosDatos);
+        if ($modificado) {
+            return $response->withStatus(200)->withJson(['mensaje' => 'Producto modificado']);
+        } else {
+            return $response->withStatus(500)->withJson(['error' => 'No se pudo modificar el producto']);
+        }
+    }
+
+    // Listados
     public function listarPedidos(ResponseInterface $response)
     {
         $pedidos = $this->pedidosDAO->listarPedidos();
@@ -106,6 +192,16 @@ class PedidosController
             return $response->withStatus(200)->withJson($pedidos);
         } else {
             return $response->withStatus(404)->withJson(['error' => 'No se encontraron pedidos']);
+        }
+    }
+    public function listarProductosEnPedidos(ResponseInterface $response)
+    {
+        $pedidos = $this->pedidosDAO->listarProductosEnPedidos();
+
+        if ($pedidos) {
+            return $response->withStatus(200)->withJson($pedidos);
+        } else {
+            return $response->withStatus(404)->withJson(['error' => 'No se encontraron productos']);
         }
     }
 }

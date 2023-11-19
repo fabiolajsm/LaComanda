@@ -8,18 +8,49 @@ class ProductoDAO
     {
         $this->pdo = $pdo;
     }
-    public function crearProducto($nombre, $precio, $sector, $stock)
+    public function crearProducto($nombre, $precio, $sector, $stock, $tiempoEstimado)
     {
         try {
-            $stmt = $this->pdo->prepare("INSERT INTO productos (nombre, precio, sector, stock) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$nombre, $precio, $sector, $stock]);
+            $stmt = $this->pdo->prepare("INSERT INTO productos (nombre, precio, sector, stock, tiempoEstimado, activo) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$nombre, $precio, $sector, $stock, $tiempoEstimado, 1]);
             return $this->pdo->lastInsertId();
         } catch (PDOException $e) {
             echo 'Error al insertar producto: ' . $e->getMessage();
             return false;
         }
     }
+    public function borrarProductoPorId($id)
+    {
+        try {
+            $stmt = $this->pdo->prepare("UPDATE productos SET activo = 0 WHERE ID = ?");
+            $stmt->execute([$id]);
+            return true;
+        } catch (PDOException $e) {
+            echo 'Error al borrar producto: ' . $e->getMessage();
+            return false;
+        }
+    }
+    public function modificarProducto($id, $nuevosDatos)
+    {
+        try {
+            $campos = '';
+            $valores = [];
+            foreach ($nuevosDatos as $campo => $valor) {
+                $campos .= "$campo = ?, ";
+                $valores[] = $valor;
+            }
+            $campos = rtrim($campos, ', ');
 
+            $stmt = $this->pdo->prepare("UPDATE productos SET $campos WHERE ID = ?");
+            $valores[] = $id;
+            $stmt->execute($valores);
+
+            return true;
+        } catch (PDOException $e) {
+            echo 'Error al modificar Producto: ' . $e->getMessage();
+            return false;
+        }
+    }
     public function obtenerProductos()
     {
         try {
@@ -30,6 +61,35 @@ class ProductoDAO
         } catch (PDOException $e) {
             echo 'Error al listar productos: ' . $e->getMessage();
             return false;
+        }
+    }
+    public function obtenerProductoPorId($id)
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM productos WHERE ID = ? AND activo = 1");
+            $stmt->execute([$id]);
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $producto;
+        } catch (PDOException $e) {
+            echo 'Error al obtener producto por ID: ' . $e->getMessage();
+            return false;
+        }
+    }
+    public function obtenerProducto($nombre, $sector)
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM productos WHERE nombre = :nombre AND sector = :sector AND activo = 1");
+            $stmt->execute([$nombre, $sector]);
+
+            $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($producto) {
+                return $producto;
+            } else {
+                return null;
+            }
+        } catch (PDOException $e) {
+            echo 'Error en la consulta: ' . $e->getMessage();
+            return null;
         }
     }
 }
