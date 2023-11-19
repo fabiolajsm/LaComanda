@@ -157,9 +157,9 @@ class PedidosController
         }
         if ($estado !== null) {
             $estado = strtoupper($estado);
-        if (!in_array($estado, $estadosPermitidos)) {
-            return $response->withStatus(400)->withJson(['error' => 'Estado incorrecto. Debe ser de tipo: PENDIENTE, PROCESO ó FINALIZADO']);
-        }
+            if (!in_array($estado, $estadosPermitidos)) {
+                return $response->withStatus(400)->withJson(['error' => 'Estado incorrecto. Debe ser de tipo: PENDIENTE, PROCESO ó FINALIZADO']);
+            }
         }
         if ($tiempoEntrega !== null && (!is_numeric($tiempoEntrega) || $tiempoEntrega < 1)) {
             return $response->withStatus(400)->withJson(['error' => 'El tiempo de entrega debe estar expresado en minutos y ser un número válido mayor a 0.']);
@@ -167,7 +167,7 @@ class PedidosController
 
         $nuevosDatos = [
             'ID' => $pedidoExistente['ID'],
-            'idCliente' =>$pedidoExistente['idCliente'],
+            'idCliente' => $pedidoExistente['idCliente'],
             'codigoMesa' => $pedidoExistente['codigoMesa'],
             'estado' => $estado ?? $pedidoExistente['estado'],
             'fotoDeLaMesa' => $fotoDeLaMesa ?? $pedidoExistente['fotoDeLaMesa'],
@@ -184,7 +184,7 @@ class PedidosController
     }
 
     // Listados
-    public function listarPedidos(ResponseInterface $response)
+    public function listarPedidos(ServerRequest $request, ResponseInterface $response)
     {
         $pedidos = $this->pedidosDAO->listarPedidos();
 
@@ -194,7 +194,7 @@ class PedidosController
             return $response->withStatus(404)->withJson(['error' => 'No se encontraron pedidos']);
         }
     }
-    public function listarProductosEnPedidos(ResponseInterface $response)
+    public function listarProductosEnPedidos(ServerRequest $request, ResponseInterface $response)
     {
         $pedidos = $this->pedidosDAO->listarProductosEnPedidos();
 

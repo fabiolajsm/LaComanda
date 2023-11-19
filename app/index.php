@@ -1,4 +1,6 @@
 <?php
+use Slim\Routing\RouteCollectorProxy;
+
 // Error Handling
 error_reporting(-1);
 ini_set('display_errors', 1);
@@ -39,90 +41,47 @@ $app->get('[/]', function (Request $request, Response $response) {
 
 $pdo = new PDO('mysql:host=localhost;dbname=segundoparcial;charset=utf8', 'root', '', array(PDO::ATTR_EMULATE_PREPARES => false, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
 
-// usuarios
+
 $usuarioDAO = new UsuarioDAO($pdo);
 $usuarioController = new UsuarioController($usuarioDAO);
-
-$app->get('/usuarios/login', function (Request $request, Response $response, $args) use ($usuarioController) {
-    $request = $request->withParsedBody($request->getParsedBody());
-    return $usuarioController->login($request, $response);
+// Grupo de rutas para usuarios
+$app->group('/usuarios', function (RouteCollectorProxy $group) use ($usuarioController) {
+    $group->get('[/]', [$usuarioController, 'listarUsuarios'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->get('/traerUno', [$usuarioController, 'listarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->post('[/]', [$usuarioController, 'altaUsuario'])->add(\AuthUsuarioMiddleware::class . ":validarSocio");
+    $group->put('[/]', [$usuarioController, 'modificarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocio");
+    $group->get('/borrar', [$usuarioController, 'borrarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
 });
 
-$app->post('/usuarios', function (Request $request, Response $response, $args) use ($usuarioController) {
-    $request = $request->withParsedBody($request->getParsedBody());
-    return $usuarioController->altaUsuario($request, $response);
-})->add(\AuthUsuarioMiddleware::class . ":validarSocio");
-
-$app->get('/usuarios/borrar/', function (Request $request, Response $response, $args) use ($usuarioController) {
-    return $usuarioController->borrarUsuarioPorId($request, $response);
-})->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
-
-$app->get('/usuarios', function (Request $request, Response $response, $args) use ($usuarioController) {
-    return $usuarioController->listarUsuarios($response);
-})->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
-
-$app->get('/usuarios/traerUno/', function (Request $request, Response $response, $args) use ($usuarioController) {
-    return $usuarioController->listarUsuarioPorId($request, $response);
-})->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
-
-$app->put('/usuarios', function (Request $request, Response $response, $args) use ($usuarioController) {
-    return $usuarioController->modificarUsuarioPorId($request, $response);
-})->add(\AuthUsuarioMiddleware::class . ":validarSocio");
-
-// productos
 $productoDAO = new ProductoDAO($pdo);
 $productoController = new ProductoController($productoDAO);
-$app->post('/productos', function (Request $request, Response $response) use ($productoController) {
-    $request = $request->withParsedBody($request->getParsedBody());
-    return $productoController->crearProducto($request, $response);
-});
-$app->get('/productos/borrar/', function (Request $request, Response $response) use ($productoController) {
-    $request = $request->withParsedBody($request->getParsedBody());
-    return $productoController->borrarProductoPorId($request, $response);
-});
-$app->get('/productos', function (Request $request, Response $response) use ($productoController) {
-    return $productoController->listarProductos($response);
-});
-$app->put('/productos', function (Request $request, Response $response, $args) use ($productoController) {
-    return $productoController->modificarProductoPorId($request, $response);
+// Grupo de rutas para productos
+$app->group('/productos', function (RouteCollectorProxy $group) use ($productoController) {
+    $group->post('[/]', [$productoController, 'crearProducto']);
+    $group->get('[/]', [$productoController, 'listarProductos']);
+    $group->put('[/]', [$productoController, 'modificarProductoPorId']);
+    $group->get('/borrar', [$productoController, 'borrarProductoPorId']);
 });
 
-// mesas
 $mesasDAO = new MesasDAO($pdo);
 $mesasController = new MesasController($mesasDAO);
-
-$app->post('/mesas', function (Request $request, Response $response) use ($mesasController) {
-    return $mesasController->crearMesa($request, $response);
-})->add(\AuthMesaMiddleware::class . ":validarAltaMesa");
-$app->get('/mesas', function (Request $request, Response $response) use ($mesasController) {
-    return $mesasController->listarMesas($response);
-});
-$app->put('/mesas', function (Request $request, Response $response) use ($mesasController) {
-    return $mesasController->modificarEstadoMesa($request, $response);
-})->add(\AuthMesaMiddleware::class . ":validarModificacionMesa");
-$app->get('/mesas/borrar', function (Request $request, Response $response) use ($mesasController) {
-    return $mesasController->borrarMesa($request, $response);
+// Grupo de rutas para mesas
+$app->group('/mesas', function (RouteCollectorProxy $group) use ($mesasController) {
+    $group->post('[/]', [$mesasController, 'crearMesa'])->add(\AuthMesaMiddleware::class . ":validarAltaMesa");
+    $group->get('[/]', [$mesasController, 'listarMesas']);
+    $group->put('[/]', [$mesasController, 'modificarEstadoMesa'])->add(\AuthMesaMiddleware::class . ":validarModificacionMesa");
+    $group->get('/borrar', [$mesasController, 'borrarMesa']);
 });
 
-// pedidos
 $pedidosDAO = new PedidosDAO($pdo);
 $pedidosController = new PedidosController($pedidosDAO);
-$app->post('/pedidos', function (Request $request, Response $response) use ($pedidosController) {
-    $request = $request->withParsedBody($request->getParsedBody());
-    return $pedidosController->crearPedido($request, $response);
-})->add(\AuthPedidoMiddleware::class . ":validarAltaPedido");
-
-$app->get('/pedidos', function (Request $request, Response $response) use ($pedidosController) {
-    return $pedidosController->listarPedidos($response);
-});
-$app->get('/pedidos_productos', function (Request $request, Response $response) use ($pedidosController) {
-    return $pedidosController->listarProductosEnPedidos($response);
-});
-$app->get('/pedidos/borrar', function (Request $request, Response $response) use ($pedidosController) {
-    return $pedidosController->borrarPedidoPorId($request, $response);
-});
-$app->post('/pedido', function (Request $request, Response $response) use ($pedidosController) {
-    return $pedidosController->modificarPedidoPorId($request, $response);
+// Grupo de rutas para pedidos
+$app->group('/pedidos', function (RouteCollectorProxy $group) use ($pedidosController) {
+    $group->post('[/]', [$pedidosController, 'crearPedido'])->add(\AuthPedidoMiddleware::class . ":validarAltaPedido");
+    $group->get('[/]', [$pedidosController, 'listarPedidos']);
+    $group->get('/productos', [$pedidosController, 'listarProductosEnPedidos']);
+    $group->get('/borrar', [$pedidosController, 'borrarPedidoPorId']);
+    $group->post('/modificar', [$pedidosController, 'modificarPedidoPorId']);
 });
 
 $app->run();

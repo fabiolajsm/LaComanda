@@ -22,8 +22,8 @@ class MesasController
         if ($idCliente === null || empty($estado)) {
             return $response->withStatus(400)->withJson(['error' => 'Completar datos obligatorios: idCliente y estado.']);
         }
-        if($this->mesasDAO->obtenerMesaPorIdCliente($idCliente)) {
-            return $response->withStatus(400)->withJson(['error'=> 'Ya existe un cliente vinculado a la mesa']);
+        if ($this->mesasDAO->obtenerMesaPorIdCliente($idCliente)) {
+            return $response->withStatus(400)->withJson(['error' => 'Ya existe un cliente vinculado a la mesa']);
         }
         $estado = strtolower($estado);
         if (!in_array($estado, $estadosPermitidos)) {
@@ -37,7 +37,7 @@ class MesasController
             return $response->withStatus(500)->withJson(['error' => 'No se pudo crear la mesa']);
         }
     }
-    public function listarMesas(ResponseInterface $response)
+    public function listarMesas(ServerRequest $request, ResponseInterface $response)
     {
         try {
             $mesas = $this->mesasDAO->obtenerMesas();

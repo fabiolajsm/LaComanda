@@ -3,6 +3,7 @@ use \Slim\Http\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 
 require_once './dao/UsuarioDAO.php';
+require './utils/AutentificadorJWT.php';
 
 class UsuarioController
 {
@@ -25,7 +26,10 @@ class UsuarioController
             }
             $usuarioEncontrado = $this->usuarioDAO->login($usuario, $contrasena);
             if ($usuarioEncontrado) {
-                return $response->withStatus(200)->withJson(['mensaje' => 'Login exitoso']);
+                $datos = array('usuario' => $usuario, 'cargoEmpleado' => $usuarioEncontrado['tipo']);
+                $token = AutentificadorJWT::CrearToken($datos);
+                $payload = array('jwt' => $token);
+                return $response->withStatus(200)->withJson($payload);
             } else {
                 return $response->withStatus(404)->withJson(['error' => 'No se encontraron usuarios']);
             }
@@ -47,7 +51,7 @@ class UsuarioController
         if (empty($usuario) || empty($contrasena) || empty($nombre) || empty($tipo) || $cantidadOperaciones === null) {
             return $response->withStatus(400)->withJson(['error' => 'Completar datos obligatorios: usuario, contrasena, nombre, tipo y cantidadOperaciones.']);
         }
-        if($this->usuarioDAO->obtenerUsuario($usuario)){
+        if ($this->usuarioDAO->obtenerUsuario($usuario)) {
             return $response->withStatus(400)->withJson(['error' => 'Ya existe el usuario: ' . $usuario]);
         }
         $tipo = strtolower($tipo);
@@ -136,7 +140,7 @@ class UsuarioController
     }
 
     // Listados
-    public function listarUsuarios(ResponseInterface $response)
+    public function listarUsuarios(ServerRequest $request, ResponseInterface $response)
     {
         try {
             $usuarios = $this->usuarioDAO->obtenerUsuarios();

@@ -124,7 +124,7 @@ class ProductoController
         }
     }
     // Listados
-    public function listarProductos(ResponseInterface $response)
+    public function listarProductos(ServerRequest $request, ResponseInterface $response)
     {
         try {
             $productos = $this->productoDAO->obtenerProductos();
