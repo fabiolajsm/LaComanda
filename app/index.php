@@ -62,6 +62,8 @@ $app->group('/productos', function (RouteCollectorProxy $group) use ($productoCo
     $group->get('[/]', [$productoController, 'listarProductos']);
     $group->put('[/]', [$productoController, 'modificarProductoPorId']);
     $group->get('/borrar', [$productoController, 'borrarProductoPorId']);
+    $group->post('/cargarCsv', [$productoController, 'cargarProductosDesdeCSV']);
+    $group->get('/descargarCsv', [$productoController, 'descargarProductosComoCSV']);
 });
 
 $mesasDAO = new MesasDAO($pdo);
