@@ -51,6 +51,7 @@ $app->group('/usuarios', function (RouteCollectorProxy $group) use ($usuarioCont
     $group->post('[/]', [$usuarioController, 'altaUsuario'])->add(\AuthUsuarioMiddleware::class . ":validarSocio");
     $group->put('[/]', [$usuarioController, 'modificarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocio");
     $group->get('/borrar', [$usuarioController, 'borrarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->get('/login', [$usuarioController, 'login']);
 });
 
 $productoDAO = new ProductoDAO($pdo);
