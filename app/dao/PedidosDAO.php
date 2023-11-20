@@ -253,4 +253,26 @@ class PedidosDAO
             return false;
         }
     }
+    public function pagarPedido($idPedido, $estado)
+    {
+        try {
+            $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = ? WHERE ID = ?");
+            $stmtPedido->execute([$estado, $idPedido]);
+
+            $stmtObtenerMesa = $this->pdo->prepare("SELECT codigoMesa FROM pedidos WHERE ID = ?");
+            $stmtObtenerMesa->execute([$idPedido]);
+            $codigoMesa = $stmtObtenerMesa->fetch(PDO::FETCH_COLUMN);
+
+            if ($codigoMesa) {
+                $stmtMesa = $this->pdo->prepare("UPDATE mesas SET estado = ? WHERE codigo = ?");
+                $stmtMesa->execute([$estado, $codigoMesa]);
+                return true;
+            } else {
+                return false;
+            }
+        } catch (PDOException $e) {
+            echo 'Error al cambiar el estado a pedido listo ' . $e->getMessage();
+            return false;
+        }
+    }
 }

@@ -256,7 +256,7 @@ class PedidosController
         if (!$pedidoExistente) {
             return $response->withStatus(404)->withJson(['error' => 'Pedido no encontrado']);
         }
-        $seModifico = $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido, 'cliente pagando');
+        $seModifico = $this->pedidosDAO->pagarPedido($idPedido, 'cliente pagando');
         if ($seModifico) {
             return $response->withStatus(200)->withJson(['mensaje' => 'Pedido con cliente pagando']);
         } else {
