@@ -89,6 +89,7 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) use ($pedidosContr
     $group->post('/modificar', [$pedidosController, 'modificarPedidoPorId']);
     $group->get('/verTiempoEspera', [$pedidosController, 'verTiempoEspera']);
     $group->get('/consultarPedidosListosYServir', [$pedidosController, 'consultarPedidosListosYServir'])->add(\AuthMesaMiddleware::class . ":validarServirPedido");
+    $group->get('/pagarPedido', [$pedidosController, 'pagarPedido'])->add(\AuthMesaMiddleware::class . ":validarServirPedido");
 });
 
 $app->run();

@@ -231,7 +231,7 @@ class PedidosController
             if ($productosListos) {
                 foreach ($productosListos as $producto) {
                     $idPedido = $producto['idPedido'];
-                    $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido);
+                    $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido, 'cliente comiendo');
                 }
                 return $response->withStatus(200)->withJson(['mensaje' => 'Pedidos verificados y mesas servidas']);
             } else {
@@ -239,6 +239,23 @@ class PedidosController
             }
         } catch (Exception $e) {
             return $response->withStatus(500)->withJson(['error' => 'Error al verificar pedidos y servir mesas']);
+        }
+    }
+    public function pagarPedido(ServerRequest $request, ResponseInterface $response){
+        $parametros = $request->getQueryParams();
+        $idPedido = $parametros['idPedido'] ?? null;
+        if ($idPedido == null || !is_string($idPedido)) {
+            return $response->withStatus(404)->withJson(['error' => 'Debe ingresar el idPedido del pedido que desea pagar.']);
+        }
+        $pedidoExistente = $this->pedidosDAO->obtenerPedidoPorId($idPedido);
+        if (!$pedidoExistente) {
+            return $response->withStatus(404)->withJson(['error' => 'Pedido no encontrado']);
+        }
+        $seModifico = $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido, 'cliente pagando');
+        if ($seModifico) {
+            return $response->withStatus(200)->withJson(['mensaje' => 'Pedido con cliente pagando']);
+        } else {
+            return $response->withStatus(500)->withJson(['error' => 'No se pudo actualizar el estado del Pedido']);
         }
     }
 }
