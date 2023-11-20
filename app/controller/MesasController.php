@@ -98,4 +98,21 @@ class MesasController
             return $response->withStatus(500)->withJson(['error' => 'No se pudo borrar la Mesa']);
         }
     }
+    public function cerrarMesa(ServerRequest $request, ResponseInterface $response){
+        $parametros = $request->getQueryParams();
+        $idPedido = $parametros['idPedido'] ?? null;
+        if ($idPedido == null || !is_string($idPedido)) {
+            return $response->withStatus(404)->withJson(['error' => 'Debe ingresar el idPedido de la mesa que desea cerrar.']);
+        }
+        $pedidoExistente = $this->mesasDAO->obtenerPedidoPorId($idPedido);
+        if (!$pedidoExistente) {
+            return $response->withStatus(404)->withJson(['error' => 'Pedido no encontrado']);
+        }
+        $seModifico = $this->mesasDAO->cerrarMesa($idPedido, 'cerrado');
+        if ($seModifico) {
+            return $response->withStatus(200)->withJson(['mensaje' => 'Mesa y pedido cerrado']);
+        } else {
+            return $response->withStatus(500)->withJson(['error' => 'No se pudo actualizar el estado de la mesa y el pedido']);
+        }
+    }
 }

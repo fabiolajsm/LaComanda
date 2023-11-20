@@ -76,6 +76,7 @@ $app->group('/mesas', function (RouteCollectorProxy $group) use ($mesasControlle
     $group->get('[/]', [$mesasController, 'listarMesas'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
     $group->put('[/]', [$mesasController, 'modificarEstadoMesa'])->add(\AuthMesaMiddleware::class . ":validarModificacionMesa");
     $group->get('/borrar', [$mesasController, 'borrarMesa'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->get('/cerrar', [$mesasController, 'cerrarMesa'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
 });
 
 $pedidosDAO = new PedidosDAO($pdo);

@@ -95,5 +95,39 @@ class MesasDAO
             return false;
         }
     }
+    public function cerrarMesa($idPedido, $estado)
+    {
+        try {
+            $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = ? WHERE ID = ?");
+            $stmtPedido->execute([$estado, $idPedido]);
+
+            $stmtObtenerMesa = $this->pdo->prepare("SELECT codigoMesa FROM pedidos WHERE ID = ?");
+            $stmtObtenerMesa->execute([$idPedido]);
+            $codigoMesa = $stmtObtenerMesa->fetch(PDO::FETCH_COLUMN);
+
+            if ($codigoMesa) {
+                $stmtMesa = $this->pdo->prepare("UPDATE mesas SET estado = ? WHERE codigo = ?");
+                $stmtMesa->execute([$estado, $codigoMesa]);
+                return true;
+            } else {
+                return false;
+            }
+        } catch (PDOException $e) {
+            echo 'Error al cambiar el estado a pedido listo ' . $e->getMessage();
+            return false;
+        }
+    }
+    public function obtenerPedidoPorId($id)
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM pedidos WHERE ID = ? AND activo = 1");
+            $stmt->execute([$id]);
+            $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $pedido;
+        } catch (PDOException $e) {
+            echo 'Error al verificar si el pedido existe en la base de datos: ' . $e->getMessage();
+            return false;
+        }
+    }
 }
 ?>
