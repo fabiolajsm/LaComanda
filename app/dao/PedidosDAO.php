@@ -227,7 +227,7 @@ class PedidosDAO
             return false;
         }
     }
-    public function cambiarEstadoMesaAListo($idPedido)
+    public function cambiarEstadoPedidoyMesa($idPedido)
     {
         try {
             $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = 'con cliente comiendo' WHERE ID = ?");

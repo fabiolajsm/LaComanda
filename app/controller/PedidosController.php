@@ -231,7 +231,7 @@ class PedidosController
             if ($productosListos) {
                 foreach ($productosListos as $producto) {
                     $idPedido = $producto['idPedido'];
-                    $this->pedidosDAO->cambiarEstadoMesaAListo($idPedido);
+                    $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido);
                 }
                 return $response->withStatus(200)->withJson(['mensaje' => 'Pedidos verificados y mesas servidas']);
             } else {
