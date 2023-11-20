@@ -108,7 +108,7 @@ class ProductoDAO
     {
         try {
             $inClause = str_repeat('?,', count($idsProductos) - 1) . '?';
-            $stmt = $this->pdo->prepare("SELECT * FROM pedidos_productos WHERE idProducto IN ($inClause) AND estado != 'cancelado'");
+            $stmt = $this->pdo->prepare("SELECT * FROM pedidos_productos WHERE idProducto IN ($inClause) AND estado = 'pendiente'");
             $stmt->execute($idsProductos);
             $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $pedidos;
