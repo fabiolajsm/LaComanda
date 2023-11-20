@@ -227,11 +227,11 @@ class PedidosDAO
             return false;
         }
     }
-    public function cambiarEstadoPedidoyMesa($idPedido, $estado)
+    public function cambiarEstadoPedidoyMesa($idPedido, $estado, $tiempoDeEntrega)
     {
         try {
-            $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = ? WHERE ID = ?");
-            $stmtPedido->execute([$estado, $idPedido]);
+            $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = ?, tiempoDeEntrega = ? WHERE ID = ?");
+            $stmtPedido->execute([$estado, $tiempoDeEntrega, $idPedido]);
 
             $stmtUpdateProductos = $this->pdo->prepare("UPDATE pedidos_productos SET estado = ? WHERE idPedido = ?");
             $stmtUpdateProductos->execute([$estado, $idPedido]);

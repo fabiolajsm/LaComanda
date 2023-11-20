@@ -259,11 +259,14 @@ class ProductoController
         $tipoEmpleado = $parametros['tipoEmpleado'] ?? null;
         $idPedido = $parametros['idPedido'] ?? null;
         $estado = $parametros['estado'] ?? null;
+        $tiempoEntrega = $parametros['tiempoEntrega'] ?? null;
 
-        if ($tipoEmpleado == null || $idPedido == null || $estado == null) {
-            return $response->withStatus(400)->withJson(['error' => 'Debe proporcionar el tipo de empleado, el ID del pedido y el estado.']);
+        if ($tipoEmpleado == null || $idPedido == null || $estado == null || $tiempoEntrega == null) {
+            return $response->withStatus(400)->withJson(['error' => 'Debe proporcionar el tipo de empleado, el ID del pedido, tiempo de entrega y el estado.']);
         }
-
+        if ($tiempoEntrega !== null && (!is_numeric($tiempoEntrega) || $tiempoEntrega < 1)) {
+            return $response->withStatus(400)->withJson(['error' => 'El tiempo de entrega debe estar expresado en minutos y ser un número válido mayor a 0.']);
+        }
         $tiposPermitidos = ['bartender', 'cervecero', 'cocinero'];
         $tipoEmpleado = strtolower($tipoEmpleado);
 
@@ -301,7 +304,7 @@ class ProductoController
             return $response->withStatus(404)->withJson(['error' => 'Productos no encontrados']);
         }
         $idsProductos = array_column($listado, 'ID');
-        $modificado = $this->productoDAO->modificarEstadoPedido($idPedido, $estado, $idsProductos);
+        $modificado = $this->productoDAO->modificarEstadoPedido($idPedido, $estado, $idsProductos, $tiempoEntrega);
 
         if ($modificado) {
             return $response->withStatus(200)->withJson(['mensaje' => 'Estado del pedido modificado correctamente']);

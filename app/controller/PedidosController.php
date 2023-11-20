@@ -229,9 +229,13 @@ class PedidosController
             $productosListos = $this->pedidosDAO->obtenerProductosListos();
 
             if ($productosListos) {
+                $tiempoDeEntrega = 0;
+                $maxTiempoDeEntrega = 0;
                 foreach ($productosListos as $producto) {
                     $idPedido = $producto['idPedido'];
-                    $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido, 'cliente comiendo');
+                    $tiempoDeEntrega += $producto['tiempoDeEntrega'];
+                    $maxTiempoDeEntrega = max($maxTiempoDeEntrega, $producto['tiempoDeEntrega']);
+                    $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido, 'cliente comiendo', $tiempoDeEntrega);
                 }
                 return $response->withStatus(200)->withJson(['mensaje' => 'Pedidos verificados y mesas servidas']);
             } else {
@@ -241,7 +245,8 @@ class PedidosController
             return $response->withStatus(500)->withJson(['error' => 'Error al verificar pedidos y servir mesas']);
         }
     }
-    public function pagarPedido(ServerRequest $request, ResponseInterface $response){
+    public function pagarPedido(ServerRequest $request, ResponseInterface $response)
+    {
         $parametros = $request->getQueryParams();
         $idPedido = $parametros['idPedido'] ?? null;
         if ($idPedido == null || !is_string($idPedido)) {
