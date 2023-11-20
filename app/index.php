@@ -87,6 +87,7 @@ $app->group('/pedidos', function (RouteCollectorProxy $group) use ($pedidosContr
     $group->get('/productos', [$pedidosController, 'listarProductosEnPedidos']);
     $group->get('/borrar', [$pedidosController, 'borrarPedidoPorId']);
     $group->post('/modificar', [$pedidosController, 'modificarPedidoPorId']);
+    $group->get('/verTiempoEspera', [$pedidosController, 'verTiempoEspera']);
 });
 
 $app->run();

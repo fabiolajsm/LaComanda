@@ -183,6 +183,25 @@ class PedidosController
         }
     }
 
+    public function verTiempoEspera(ServerRequest $request, ResponseInterface $response)
+    {
+        $parametros = $request->getQueryParams();
+        $numeroDePedido = $parametros['numeroDePedido'] ?? null;
+        $codigoMesa = $parametros['codigoMesa'] ?? null;
+
+        if ($numeroDePedido == null || $codigoMesa == null) {
+            return $response->withStatus(404)->withJson(['error' => 'Debe ingresar el número de pedido y el código de mesa a consultar.']);
+        }
+
+        $tiempoEstimado = $this->pedidosDAO->obtenerTiempoEstimadoPorPedidoYMesa($numeroDePedido, $codigoMesa);
+
+        if ($tiempoEstimado !== null) {
+            return $response->withStatus(200)->withJson(['tiempoEstimado' => $tiempoEstimado]);
+        } else {
+            return $response->withStatus(404)->withJson(['error' => 'No se encontró el tiempo estimado para el pedido y la mesa proporcionados.']);
+        }
+    }
+
     // Listados
     public function listarPedidos(ServerRequest $request, ResponseInterface $response)
     {

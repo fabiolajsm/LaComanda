@@ -193,13 +193,26 @@ class PedidosDAO
     public function codigoDeMesaExisteEnBD($codigo)
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM mesas WHERE codigo = ? AND activo = 1"); 
+            $stmt = $this->pdo->prepare("SELECT * FROM mesas WHERE codigo = ? AND activo = 1");
             $stmt->execute([$codigo]);
             $mesa = $stmt->fetch(PDO::FETCH_ASSOC);
             return $mesa;
         } catch (PDOException $e) {
             echo 'Error al obtener mesa por codigo: ' . $e->getMessage();
             return false;
+        }
+    }
+    public function obtenerTiempoEstimadoPorPedidoYMesa($numeroDePedido, $codigoMesa)
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT tiempoEstimado FROM pedidos WHERE ID = :numeroDePedido AND codigoMesa = :codigoMesa AND activo = 1");
+
+            $stmt->execute(['numeroDePedido' => $numeroDePedido, 'codigoMesa' => $codigoMesa]);
+            $tiempoEstimado = $stmt->fetch(PDO::FETCH_COLUMN);
+
+            return $tiempoEstimado !== false ? $tiempoEstimado : null;
+        } catch (PDOException $e) {
+            return null;
         }
     }
 }
