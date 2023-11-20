@@ -14,7 +14,7 @@ class AuthUsuarioMiddleware
         if ($cargoEmpleado === 'socio') {
             $response = $handler->handle($request);
         } else {
-            $mensaje = 'No sos Socio, no puedes dar de alta ni de baja un usuario';
+            $mensaje = 'No sos Socio, no puedes hacer esta accion';
             if ($cargoEmpleado === null) {
                 $mensaje = 'Debe ingresar cargoEmpleado';
             }
@@ -32,7 +32,7 @@ class AuthUsuarioMiddleware
         if ($cargoEmpleado === 'socio') {
             $response = $handler->handle($request);
         } else {
-            $mensaje = 'No sos Socio, no puedes ver todos los usuarios';
+            $mensaje = 'No sos Socio, no puedes ver hacer esta accion';
             if ($cargoEmpleado === null) {
                 $mensaje = 'Debe ingresar cargoEmpleado';
             }

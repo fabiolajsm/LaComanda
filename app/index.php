@@ -73,9 +73,9 @@ $mesasController = new MesasController($mesasDAO);
 // Grupo de rutas para mesas
 $app->group('/mesas', function (RouteCollectorProxy $group) use ($mesasController) {
     $group->post('[/]', [$mesasController, 'crearMesa'])->add(\AuthMesaMiddleware::class . ":validarAltaMesa");
-    $group->get('[/]', [$mesasController, 'listarMesas']);
+    $group->get('[/]', [$mesasController, 'listarMesas'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
     $group->put('[/]', [$mesasController, 'modificarEstadoMesa'])->add(\AuthMesaMiddleware::class . ":validarModificacionMesa");
-    $group->get('/borrar', [$mesasController, 'borrarMesa']);
+    $group->get('/borrar', [$mesasController, 'borrarMesa'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
 });
 
 $pedidosDAO = new PedidosDAO($pdo);
