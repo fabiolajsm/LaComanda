@@ -296,8 +296,12 @@ class ProductoController
         if (!$pedidoPerteneceAlSector) {
             return $response->withStatus(400)->withJson(['error' => 'El pedido no pertenece al sector del tipo de empleado proporcionado.']);
         }
-
-        $modificado = $this->productoDAO->modificarEstadoPedido($idPedido, $estado);
+        $listado = $this->productoDAO->listarProductosPorSector($sector);
+        if (!$listado) {
+            return $response->withStatus(404)->withJson(['error' => 'Productos no encontrados']);
+        }
+        $idsProductos = array_column($listado, 'ID');
+        $modificado = $this->productoDAO->modificarEstadoPedido($idPedido, $estado, $idsProductos);
 
         if ($modificado) {
             return $response->withStatus(200)->withJson(['mensaje' => 'Estado del pedido modificado correctamente']);

@@ -132,12 +132,13 @@ class ProductoDAO
             return false;
         }
     }
-    public function modificarEstadoPedido($idPedido, $nuevoEstado)
+    public function modificarEstadoPedido($idPedido, $nuevoEstado, $idsProductos)
     {
         try {
-            $stmt = $this->pdo->prepare("UPDATE pedidos_productos SET estado = ? WHERE idPedido = ?");
-            $stmt->execute([$nuevoEstado, $idPedido]);
-
+            $placeholders = str_repeat('?,', count($idsProductos) - 1) . '?';
+            $stmt = $this->pdo->prepare("UPDATE pedidos_productos SET estado = ? WHERE idPedido = ? AND idProducto IN ($placeholders)");
+            $stmtValues = array_merge([$nuevoEstado, $idPedido], $idsProductos);
+            $stmt->execute($stmtValues);
             return true;
         } catch (PDOException $e) {
             echo 'Error al modificar el estado del pedido: ' . $e->getMessage();
