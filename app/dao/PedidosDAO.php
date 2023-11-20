@@ -215,4 +215,27 @@ class PedidosDAO
             return null;
         }
     }
+    public function obtenerProductosListos()
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM pedidos_productos WHERE estado = 'LISTO PARA SERVIR'");
+            $stmt->execute();
+            $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $pedidos;
+        } catch (PDOException $e) {
+            echo 'Error al obtener productos listos: ' . $e->getMessage();
+            return false;
+        }
+    }
+    public function cambiarEstadoMesaAListo($idPedido)
+    {
+        try {
+            $stmt = $this->pdo->prepare("UPDATE pedidos SET estado = 'LISTO' WHERE ID = ?");
+            $stmt->execute([$idPedido]);
+            return true;
+        } catch (PDOException $e) {
+            echo 'Error al cambiar el estado a pedido listo ' . $e->getMessage();
+            return false;
+        }
+    }
 }

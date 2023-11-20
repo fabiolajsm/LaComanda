@@ -46,5 +46,23 @@ class AuthMesaMiddleware
         }
         return $response;
     }
+    public function validarServirPedido(Request $request, RequestHandler $handler): ResponseInterface
+    {
+        $parametros = $request->getQueryParams();
+
+        $cargoEmpleado = $parametros['cargoEmpleado'] ?? null;
+        if ($cargoEmpleado === 'mozo') {
+            $response = $handler->handle($request);
+        } else {
+            $mensaje = 'No eres mozo, no puedes servir los productos listos';
+            if ($cargoEmpleado === null) {
+                $mensaje = 'Debe ingresar cargoEmpleado';
+            }
+            $response = new Response();
+            $payload = json_encode(array('mensaje' => $mensaje));
+            $response->getBody()->write($payload);
+        }
+        return $response;
+    }
 }
 ?>

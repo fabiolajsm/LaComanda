@@ -223,4 +223,22 @@ class PedidosController
             return $response->withStatus(404)->withJson(['error' => 'No se encontraron productos']);
         }
     }
+    public function consultarPedidosListosYServir(ServerRequest $request, ResponseInterface $response)
+    {
+        try {
+            $productosListos = $this->pedidosDAO->obtenerProductosListos();
+
+            if ($productosListos) {
+                foreach ($productosListos as $producto) {
+                    $idPedido = $producto['idPedido'];
+                    $this->pedidosDAO->cambiarEstadoMesaAListo($idPedido);
+                }
+                return $response->withStatus(200)->withJson(['mensaje' => 'Pedidos verificados y mesas servidas']);
+            } else {
+                return $response->withStatus(404)->withJson(['error' => 'No se encontraron productos listos para servir']);
+            }
+        } catch (Exception $e) {
+            return $response->withStatus(500)->withJson(['error' => 'Error al verificar pedidos y servir mesas']);
+        }
+    }
 }
