@@ -271,7 +271,7 @@ class ProductoController
         if (!in_array($tipoEmpleado, $tiposPermitidos)) {
             return $response->withStatus(400)->withJson(['error' => 'Tipo de empleado incorrecto. Debe ser de tipo: bartender, cervecero, cocinero.']);
         }
-        $estadosPermitidos = ['PENDIENTE', 'PROCESO', 'FINALIZADO'];
+        $estadosPermitidos = ['PENDIENTE', 'PROCESO', 'FINALIZADO', "LISTO PARA SERVIR"];
         $estado = strtoupper($estado);
         if (!in_array($estado, $estadosPermitidos)) {
             return $response->withStatus(400)->withJson(['error' => 'Estado incorrecto. Debe ser de tipo: PENDIENTE, PROCESO ó FINALIZADO']);
