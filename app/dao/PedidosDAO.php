@@ -233,8 +233,8 @@ class PedidosDAO
             $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = ?, tiempoDeEntrega = ? WHERE ID = ?");
             $stmtPedido->execute([$estado, $tiempoDeEntrega, $idPedido]);
 
-            $stmtUpdateProductos = $this->pdo->prepare("UPDATE pedidos_productos SET estado = ? WHERE idPedido = ?");
-            $stmtUpdateProductos->execute([$estado, $idPedido]);
+            $stmtUpdateProductos = $this->pdo->prepare("UPDATE pedidos_productos SET estado = 'SERVIDO' WHERE idPedido = ?");
+            $stmtUpdateProductos->execute([$idPedido]);
 
             $stmtObtenerMesa = $this->pdo->prepare("SELECT codigoMesa FROM pedidos WHERE ID = ?");
             $stmtObtenerMesa->execute([$idPedido]);
