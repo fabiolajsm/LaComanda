@@ -211,4 +211,46 @@ class ProductoController
         }
         return $parsedData;
     }
+    public function listarProductosSegunEmpleado(ServerRequest $request, ResponseInterface $response)
+    {
+        $parametros = $request->getQueryParams();
+        $tiposPermitidos = ['bartender', 'cervecero', 'cocinero', 'mozo'];
+        $tipoEmpleado = $parametros['tipoEmpleado'] ?? null;
+    
+        if ($tipoEmpleado == null || !is_string($tipoEmpleado)) {
+            return $response->withStatus(404)->withJson(['error' => 'Debe ingresar el tipo de empleado del que desea ver los pedidos pendientes.']);
+        }
+        $tipoEmpleado = strtolower($tipoEmpleado);
+        if (!in_array($tipoEmpleado, $tiposPermitidos)) {
+            return $response->withStatus(400)->withJson(['error' => 'Tipo de empleado incorrecto. Debe ser de tipo: bartender, cervecero, cocinero o mozo.']);
+        }
+        $sector = "";
+        switch ($tipoEmpleado) {
+            case 'bartender':
+                $sector = "A";
+                break;
+            case 'cervecero':
+                $sector = "B";
+                break;
+            case 'cocinero':
+                $sector = "C";
+                break;
+            case 'mozo':
+                $sector = "D";
+                break;
+            default:
+                break;
+        }
+    
+        $listado = $this->productoDAO->listarProductosPorSector($sector);
+        if (!$listado) {
+            return $response->withStatus(404)->withJson(['error' => 'Productos no encontrados']);
+        }
+        $idsProductos = array_column($listado, 'ID');
+        $pedidos = $this->productoDAO->listarPedidosPorProductos($idsProductos);
+        if (!$pedidos) {
+            return $response->withStatus(404)->withJson(['error' => 'Pedidos no encontrados']);
+        }
+        return $response->withStatus(200)->withJson($pedidos);
+    }    
 }

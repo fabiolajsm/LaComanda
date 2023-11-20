@@ -92,5 +92,30 @@ class ProductoDAO
             return null;
         }
     }
+    public function listarProductosPorSector($sector)
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM productos WHERE sector = ? AND activo = 1");
+            $stmt->execute([$sector]);
+            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $productos;
+        } catch (PDOException $e) {
+            echo 'Error al listar productos por sector: ' . $e->getMessage();
+            return false;
+        }
+    }
+    public function listarPedidosPorProductos($idsProductos)
+    {
+        try {
+            $inClause = str_repeat('?,', count($idsProductos) - 1) . '?';
+            $stmt = $this->pdo->prepare("SELECT * FROM pedidos_productos WHERE idProducto IN ($inClause) AND estado != 'cancelado'");
+            $stmt->execute($idsProductos);
+            $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $pedidos;
+        } catch (PDOException $e) {
+            echo 'Error al listar pedidos por productos: ' . $e->getMessage();
+            return false;
+        }
+    }
 }
 ?>
