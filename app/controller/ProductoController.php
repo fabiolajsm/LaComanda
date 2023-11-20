@@ -216,7 +216,7 @@ class ProductoController
         $parametros = $request->getQueryParams();
         $tiposPermitidos = ['bartender', 'cervecero', 'cocinero', 'mozo'];
         $tipoEmpleado = $parametros['tipoEmpleado'] ?? null;
-    
+
         if ($tipoEmpleado == null || !is_string($tipoEmpleado)) {
             return $response->withStatus(404)->withJson(['error' => 'Debe ingresar el tipo de empleado del que desea ver los pedidos pendientes.']);
         }
@@ -241,7 +241,7 @@ class ProductoController
             default:
                 break;
         }
-    
+
         $listado = $this->productoDAO->listarProductosPorSector($sector);
         if (!$listado) {
             return $response->withStatus(404)->withJson(['error' => 'Productos no encontrados']);
@@ -252,5 +252,59 @@ class ProductoController
             return $response->withStatus(404)->withJson(['error' => 'Pedidos no encontrados']);
         }
         return $response->withStatus(200)->withJson($pedidos);
-    }    
+    }
+    public function modificarProductoSegunEmpleado(ServerRequest $request, ResponseInterface $response)
+    {
+        $parametros = $request->getParsedBody();
+
+        $tipoEmpleado = $parametros['tipoEmpleado'] ?? null;
+        $idPedido = $parametros['idPedido'] ?? null;
+        $estado = $parametros['estado'] ?? null;
+
+        if ($tipoEmpleado == null || $idPedido == null || $estado == null) {
+            return $response->withStatus(400)->withJson(['error' => 'Debe proporcionar el tipo de empleado, el ID del pedido y el estado.']);
+        }
+
+        $tiposPermitidos = ['bartender', 'cervecero', 'cocinero'];
+        $tipoEmpleado = strtolower($tipoEmpleado);
+
+        if (!in_array($tipoEmpleado, $tiposPermitidos)) {
+            return $response->withStatus(400)->withJson(['error' => 'Tipo de empleado incorrecto. Debe ser de tipo: bartender, cervecero, cocinero.']);
+        }
+        $estadosPermitidos = ['PENDIENTE', 'PROCESO', 'FINALIZADO'];
+        $estado = strtoupper($estado);
+        if (!in_array($estado, $estadosPermitidos)) {
+            return $response->withStatus(400)->withJson(['error' => 'Estado incorrecto. Debe ser de tipo: PENDIENTE, PROCESO ó FINALIZADO']);
+        }
+        $sector = '';
+        switch ($tipoEmpleado) {
+            case 'bartender':
+                $sector = 'A';
+                break;
+            case 'cervecero':
+                $sector = 'B';
+                break;
+            case 'cocinero':
+                $sector = 'C';
+                break;
+            case 'mozo':
+                $sector = 'D';
+                break;
+            default:
+                break;
+        }
+        $pedidoPerteneceAlSector = $this->productoDAO->verificarPedidoPerteneceAlSector($idPedido, $sector);
+        if (!$pedidoPerteneceAlSector) {
+            return $response->withStatus(400)->withJson(['error' => 'El pedido no pertenece al sector del tipo de empleado proporcionado.']);
+        }
+
+        $modificado = $this->productoDAO->modificarEstadoPedido($idPedido, $estado);
+
+        if ($modificado) {
+            return $response->withStatus(200)->withJson(['mensaje' => 'Estado del pedido modificado correctamente']);
+        } else {
+            return $response->withStatus(500)->withJson(['error' => 'No se pudo modificar el estado del pedido']);
+        }
+    }
+
 }
