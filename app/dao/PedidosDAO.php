@@ -125,7 +125,7 @@ class PedidosDAO
     public function listarPedidos()
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM pedidos");
+            $stmt = $this->pdo->prepare("SELECT * FROM pedidos WHERE activo = 1");
             $stmt->execute();
             $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($pedidos as &$pedido) {
