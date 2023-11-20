@@ -101,19 +101,18 @@ class ProductoController
         if ($nombre == null && $precio == null && $stock == null && $tiempoEstimado === null) {
             return $response->withStatus(404)->withJson(['error' => 'Debe ingresar algun campo que desee modificar. Los campos permitidos para modificar son: precio, nombre, stock y tiempoEstimado.']);
         }
-        if (!is_numeric($stock) || $stock < 0) {
+        if ($stock !== null && !is_numeric($stock) || $stock < 0) {
             return $response->withStatus(400)->withJson(['error' => 'El stock debe ser un número válido mayor a 0.']);
         }
-        if (!is_string($nombre)) {
+        if ($nombre !== null && !is_string($nombre)) {
             return $response->withStatus(400)->withJson(['error' => 'El nombre debe ser un texto válido.']);
         }
-        if (!is_numeric($precio) || $precio < 0) {
+        if ($precio !== null && !is_numeric($precio) || $precio < 0) {
             return $response->withStatus(400)->withJson(['error' => 'El precio debe ser un número válido mayor a 0.']);
         }
-        if (!is_numeric($tiempoEstimado) || $tiempoEstimado < 0) {
+        if ($tiempoEstimado !== null && !is_numeric($tiempoEstimado) || $tiempoEstimado < 0) {
             return $response->withStatus(400)->withJson(['error' => 'El tiempo estimado debe estar expresado en minutos y ser un número válido mayor a 0.']);
         }
-        $precio = $precio + 0.0;
 
         $nuevosDatos = [
             'ID' => $productoExistente['ID'],
@@ -121,7 +120,7 @@ class ProductoController
             'precio' => $precio ?? $productoExistente['precio'],
             'sector' => $productoExistente['sector'],
             'stock' => $stock ?? $productoExistente['stock'],
-            'tiempoEstimado' => $tiempoEstimado ?? $productoExistente['tiempo$tiempoEstimado'],
+            'tiempoEstimado' => $tiempoEstimado ?? $productoExistente['tiempoEstimado'],
             'activo' => $productoExistente['activo'],
         ];
         $modificado = $this->productoDAO->modificarProducto($id, $nuevosDatos);
