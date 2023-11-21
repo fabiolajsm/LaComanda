@@ -140,5 +140,24 @@ class MesasDAO
             return false;
         }
     }
+    public function obtenerMejoresComentarios()
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT codigoMesa, ROUND(AVG((pMesa + pRestaurante + pMozo + pCocinero) / 4), 2) as puntuacionPromedia
+                FROM encuesta
+                GROUP BY codigoMesa
+                ORDER BY puntuacionPromedia DESC
+                LIMIT 5
+            ");
+            $stmt->execute();
+            $mejoresComentarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return $mejoresComentarios;
+        } catch (PDOException $e) {
+            echo 'Error al obtener mejores comentarios: ' . $e->getMessage();
+            return false;
+        }
+    }
 }
 ?>

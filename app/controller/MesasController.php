@@ -167,11 +167,11 @@ class MesasController
     public function obtenerMejoresComentarios(ServerRequest $request, ResponseInterface $response)
     {
         try {
-            $mesas = $this->mesasDAO->obtenerMesas();
-            if ($mesas) {
-                return $response->withStatus(200)->withJson($mesas);
+            $mejoresComentarios = $this->mesasDAO->obtenerMejoresComentarios();
+            if ($mejoresComentarios) {
+                return $response->withStatus(200)->withJson($mejoresComentarios);
             } else {
-                return $response->withStatus(404)->withJson(['error' => 'No se encontraron mesas']);
+                return $response->withStatus(404)->withJson(['error' => 'No se encontraron comentarios']);
             }
         } catch (PDOException $e) {
             return $response->withStatus(500)->withJson(['error' => 'Error en la base de datos']);
