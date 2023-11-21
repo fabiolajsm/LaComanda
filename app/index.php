@@ -16,6 +16,7 @@ require_once './controller/PedidosController.php';
 require './middlewares/AuthMesaMiddleware.php';
 require './middlewares/AuthPedidoMiddleware.php';
 require './middlewares/AuthUsuarioMiddleware.php';
+require './middlewares/AuthTokenMiddleware.php';
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -46,7 +47,7 @@ $usuarioDAO = new UsuarioDAO($pdo);
 $usuarioController = new UsuarioController($usuarioDAO);
 // Grupo de rutas para usuarios
 $app->group('/usuarios', function (RouteCollectorProxy $group) use ($usuarioController) {
-    $group->get('[/]', [$usuarioController, 'listarUsuarios'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->get('[/]', [$usuarioController, 'listarUsuarios'])->add(\AuthTokenMiddleware::class . ":validarSocio");
     $group->get('/traerUno', [$usuarioController, 'listarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
     $group->post('[/]', [$usuarioController, 'altaUsuario'])->add(\AuthUsuarioMiddleware::class . ":validarSocio");
     $group->put('[/]', [$usuarioController, 'modificarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocio");
