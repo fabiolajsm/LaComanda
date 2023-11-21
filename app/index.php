@@ -59,10 +59,10 @@ $productoDAO = new ProductoDAO($pdo);
 $productoController = new ProductoController($productoDAO);
 // Grupo de rutas para productos
 $app->group('/productos', function (RouteCollectorProxy $group) use ($productoController) {
-    $group->post('[/]', [$productoController, 'crearProducto']);
+    $group->post('[/]', [$productoController, 'crearProducto'])->add(\AuthTokenMiddleware::class . ":validarSocio");
     $group->get('[/]', [$productoController, 'listarProductos']);
-    $group->put('[/]', [$productoController, 'modificarProductoPorId']);
-    $group->get('/borrar', [$productoController, 'borrarProductoPorId']);
+    $group->put('[/]', [$productoController, 'modificarProductoPorId'])->add(\AuthTokenMiddleware::class . ":validarSocio");
+    $group->get('/borrar', [$productoController, 'borrarProductoPorId'])->add(\AuthTokenMiddleware::class . ":validarSocio");
     $group->post('/cargarCsv', [$productoController, 'cargarProductosDesdeCSV']);
     $group->get('/descargarCsv', [$productoController, 'descargarProductosComoCSV']);
     $group->get('/segunEmpleado', [$productoController, 'listarProductosSegunEmpleado']);
