@@ -159,5 +159,25 @@ class MesasDAO
             return false;
         }
     }
+    public function obtenerMesaMasUsada()
+    {
+        try {
+            $stmt = $this->pdo->prepare("
+            SELECT codigoMesa, COUNT(*) as cantidadUsos
+            FROM pedidos
+            WHERE estado = 'cerrado'
+            GROUP BY codigoMesa
+            ORDER BY cantidadUsos DESC
+            LIMIT 1
+        ");
+            $stmt->execute();
+            $mesaMasUsada = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $mesaMasUsada;
+        } catch (PDOException $e) {
+            echo 'Error al obtener la mesa más usada: ' . $e->getMessage();
+            return false;
+        }
+    }
 }
 ?>

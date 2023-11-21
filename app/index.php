@@ -79,6 +79,7 @@ $app->group('/mesas', function (RouteCollectorProxy $group) use ($mesasControlle
     $group->get('/cerrar', [$mesasController, 'cerrarMesa'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
     $group->post('/encuesta', [$mesasController, 'completarEncuesta']);
     $group->get('/mejoresComentarios', [$mesasController, 'obtenerMejoresComentarios'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->get('/mesaMasUsada', [$mesasController, 'obtenerMesaMasUsada'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
 
 });
 

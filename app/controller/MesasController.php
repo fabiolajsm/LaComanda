@@ -177,4 +177,17 @@ class MesasController
             return $response->withStatus(500)->withJson(['error' => 'Error en la base de datos']);
         }
     }
+    public function obtenerMesaMasUsada(ServerRequest $request, ResponseInterface $response)
+    {
+        try {
+            $obtenerMesaMasUsada = $this->mesasDAO->obtenerMesaMasUsada();
+            if ($obtenerMesaMasUsada) {
+                return $response->withStatus(200)->withJson($obtenerMesaMasUsada);
+            } else {
+                return $response->withStatus(404)->withJson(['error' => 'No se encontraron mesas']);
+            }
+        } catch (PDOException $e) {
+            return $response->withStatus(500)->withJson(['error' => 'Error en la base de datos']);
+        }
+    }
 }
