@@ -129,5 +129,16 @@ class MesasDAO
             return false;
         }
     }
+    public function completarEncuesta($codigoMesa, $idPedido, $pMesa, $pRestaurante, $pMozo, $pCocinero, $comentario)
+    {
+        try {
+            $stmt = $this->pdo->prepare("INSERT INTO encuesta (codigoMesa, idPedido, pMesa, pRestaurante, pMozo, pCocinero, comentario) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$codigoMesa, $idPedido, $pMesa, $pRestaurante, $pMozo, $pCocinero, $comentario]);
+            return true;
+        } catch (PDOException $e) {
+            echo 'Error al insertar encuesta: ' . $e->getMessage();
+            return false;
+        }
+    }
 }
 ?>

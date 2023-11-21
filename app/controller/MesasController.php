@@ -98,7 +98,8 @@ class MesasController
             return $response->withStatus(500)->withJson(['error' => 'No se pudo borrar la Mesa']);
         }
     }
-    public function cerrarMesa(ServerRequest $request, ResponseInterface $response){
+    public function cerrarMesa(ServerRequest $request, ResponseInterface $response)
+    {
         $parametros = $request->getQueryParams();
         $idPedido = $parametros['idPedido'] ?? null;
         if ($idPedido == null || !is_string($idPedido)) {
@@ -113,6 +114,67 @@ class MesasController
             return $response->withStatus(200)->withJson(['mensaje' => 'Mesa y pedido cerrado']);
         } else {
             return $response->withStatus(500)->withJson(['error' => 'No se pudo actualizar el estado de la mesa y el pedido']);
+        }
+    }
+    public function completarEncuesta(ServerRequest $request, ResponseInterface $response)
+    {
+        $data = $request->getParsedBody();
+        $codigoMesa = $data['codigoMesa'] ?? null;
+        $idPedido = $data['idPedido'] ?? null;
+        $pMesa = $data['pMesa'] ?? null;
+        $pRestaurante = $data['pRestaurante'] ?? null;
+        $pMozo = $data['pMozo'] ?? null;
+        $pCocinero = $data['pCocinero'] ?? null;
+        $comentario = $data['comentario'] ?? null;
+
+        if ($codigoMesa === null || $idPedido === null || $pMesa === null || $pRestaurante === null || $pMozo === null || $pCocinero === null || $comentario === null) {
+            return $response->withStatus(400)->withJson(['error' => 'Completar datos obligatorios: codigoMesa, idCliente, pMesa, pRestaurante, pMozo, pCocinero y comentario.']);
+        }
+        if (!is_numeric($codigoMesa)) {
+            return $response->withStatus(400)->withJson(['error' => 'El codigoMesa debe ser una numero valido']);
+        }
+        if (!$idPedido || !is_string($idPedido) && !empty($idPedido)) {
+            return $response->withStatus(400)->withJson(['error' => 'El idPedido debe ser una palabra']);
+        }
+        if (!$comentario || !is_string($comentario) && !empty($comentario) || strlen($comentario) > 66) {
+            return $response->withStatus(400)->withJson(['error' => 'El comentario debe ser una texto valido de hasta 66 caracteres']);
+        }
+        if (!is_numeric($pMesa) || !is_numeric($pMozo) || !is_numeric($pRestaurante) || !is_numeric($pCocinero)) {
+            return $response->withStatus(400)->withJson(['error' => 'Las puntuaciones deben ser numeros validos']);
+        }
+        if ($pMesa < 1 || $pMesa > 10 || $pMozo < 1 || $pMozo > 10 || $pRestaurante < 1 || $pRestaurante > 10 || $pCocinero < 1 || $pCocinero > 10) {
+            return $response->withStatus(400)->withJson(['error' => 'Las puntuaciones deben estar en el rango de 1 al 10']);
+        }
+        $mesaExistente = $this->mesasDAO->obtenerMesaPorCodigo($codigoMesa);
+        if (!$mesaExistente) {
+            return $response->withStatus(404)->withJson(['error' => 'Mesa no encontrada']);
+        }
+        $pedidoExistente = $this->mesasDAO->obtenerPedidoPorId($idPedido);
+        if (!$pedidoExistente) {
+            return $response->withStatus(404)->withJson(['error' => 'Pedido no encontrado']);
+        }
+        if ($mesaExistente['estado'] !== 'cerrado' || $pedidoExistente['estado'] !== 'cerrado') {
+            return $response->withStatus(404)->withJson(['error' => 'No puede completar la encuesta ya que ']);
+        }
+
+        $encuestaCompleta = $this->mesasDAO->completarEncuesta($codigoMesa, $idPedido, $pMesa, $pRestaurante, $pMozo, $pCocinero, $comentario);
+        if ($encuestaCompleta) {
+            return $response->withStatus(201)->withJson(['mensaje' => 'Encuesta guardada']);
+        } else {
+            return $response->withStatus(500)->withJson(['error' => 'No se pudo guardar la encuesta']);
+        }
+    }
+    public function obtenerMejoresComentarios(ServerRequest $request, ResponseInterface $response)
+    {
+        try {
+            $mesas = $this->mesasDAO->obtenerMesas();
+            if ($mesas) {
+                return $response->withStatus(200)->withJson($mesas);
+            } else {
+                return $response->withStatus(404)->withJson(['error' => 'No se encontraron mesas']);
+            }
+        } catch (PDOException $e) {
+            return $response->withStatus(500)->withJson(['error' => 'Error en la base de datos']);
         }
     }
 }
