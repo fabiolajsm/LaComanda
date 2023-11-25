@@ -11,12 +11,12 @@ class UsuarioDAO
     public function login($usuario, $contrasena)
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE usuario = :usuario AND contrasena = :contrasena AND activo = 1");
-            $stmt->execute(['usuario' => $usuario, 'contrasena' => $contrasena]);
+            $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE usuario = :usuario AND activo = 1");
+            $stmt->execute(['usuario' => strtolower($usuario)]);
 
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($usuario) {
-                return $usuario;
+            $usuarioEncontrado = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($usuarioEncontrado && password_verify($contrasena, $usuarioEncontrado['contrasena'])) {
+                return $usuarioEncontrado;
             } else {
                 return null;
             }
@@ -29,8 +29,10 @@ class UsuarioDAO
     public function crearUsuario($usuario, $contrasena, $nombre, $tipo, $cantidadOperaciones)
     {
         try {
-            $stmt = $this->pdo->prepare("INSERT INTO usuarios (usuario, contrasena, nombre, tipo, cantidadOperaciones, activo) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([strtolower($usuario), strtolower($contrasena), strtolower($nombre), strtolower($tipo), $cantidadOperaciones, 1]);
+            $contrasenaHash = password_hash($contrasena, PASSWORD_DEFAULT);
+            $horaActual = date('Y-m-d H:i:s');
+            $stmt = $this->pdo->prepare("INSERT INTO usuarios (usuario, contrasena, nombre, tipo, cantidadOperaciones, activo, horaDeAlta, horaDeBaja) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([strtolower($usuario), $contrasenaHash, strtolower($nombre), strtolower($tipo), $cantidadOperaciones, 1, $horaActual, null]);
             return $this->pdo->lastInsertId();
         } catch (PDOException $e) {
             echo 'Error al insertar usuario: ' . $e->getMessage();
@@ -40,8 +42,9 @@ class UsuarioDAO
     public function borrarUsuario($id)
     {
         try {
-            $stmt = $this->pdo->prepare("UPDATE usuarios SET activo = 0 WHERE ID = ?");
-            $stmt->execute([$id]);
+            $horaBaja = date('Y-m-d H:i:s');
+            $stmt = $this->pdo->prepare("UPDATE usuarios SET activo = 0, horaDeBaja = ? WHERE ID = ?");
+            $stmt->execute([$horaBaja, $id]);
             return true;
         } catch (PDOException $e) {
             echo 'Error al borrar usuario: ' . $e->getMessage();
@@ -97,7 +100,7 @@ class UsuarioDAO
     public function obtenerUsuario($usuario)
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE usuario = :usuario");
+            $stmt = $this->pdo->prepare("SELECT * FROM usuarios WHERE usuario = :usuario AND activo = 1");
             $stmt->execute(['usuario' => $usuario]);
 
             $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
