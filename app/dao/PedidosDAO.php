@@ -260,7 +260,7 @@ class PedidosDAO
             $stmtPedido->execute([$idPedido]);
             $estadoPedido = $stmtPedido->fetchColumn();
 
-            if ($estadoPedido !== 'cerrado') {
+            if ($estadoPedido !== 'cerrado' && $estadoPedido === 'cliente comiendo') {
                 $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = ? WHERE ID = ?");
                 $stmtPedido->execute([$estado, $idPedido]);
 

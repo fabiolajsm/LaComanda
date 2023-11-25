@@ -122,16 +122,16 @@ class ProductoDAO
         try {
             $stmt = $this->pdo->prepare("SELECT p.idPedido FROM pedidos_productos AS p
             INNER JOIN productos AS pr ON p.idProducto = pr.ID
-            WHERE p.idPedido = :idPedido AND pr.sector = :sector AND p.estado != 'cancelado'");
+            WHERE p.idPedido = :idPedido AND pr.sector = :sector AND p.estado != 'cerrado' AND p.estado != 'cancelado'");
             $stmt->execute(['idPedido' => $idPedido, 'sector' => $sector]);
             $pedido = $stmt->fetch(PDO::FETCH_ASSOC);
-
             return ($pedido !== false);
         } catch (PDOException $e) {
             echo 'Error al verificar si el pedido pertenece al sector: ' . $e->getMessage();
             return false;
         }
     }
+
     public function modificarEstadoPedido($idPedido, $nuevoEstado, $idsProductos, $tiempoEntrega)
     {
         try {

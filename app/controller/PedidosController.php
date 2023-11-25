@@ -146,6 +146,9 @@ class PedidosController
         if (!$pedidoExistente) {
             return $response->withStatus(404)->withJson(['error' => 'Pedido no encontrado']);
         }
+        if ($pedidoExistente['estado'] === 'cerrado') {
+            return $response->withStatus(404)->withJson(['error' => 'No se puede modificar un pedido que ya fue cerrado']);
+        }
         if ($fotoDeLaMesa == null && $tiempoEntrega == null && $estado == null) {
             return $response->withStatus(404)->withJson(['error' => 'Debe ingresar algun campo que desee modificar. Los campos permitidos para modificar son: fotoDeLaMesa, tiempoEntrega y estado.']);
         }
@@ -227,17 +230,26 @@ class PedidosController
     {
         try {
             $productosListos = $this->pedidosDAO->obtenerProductosListos();
-
             if ($productosListos) {
                 $tiempoDeEntrega = 0;
                 $maxTiempoDeEntrega = 0;
+                $todosListosParaServir = true;
+
                 foreach ($productosListos as $producto) {
                     $idPedido = $producto['idPedido'];
                     $tiempoDeEntrega += $producto['tiempoDeEntrega'];
                     $maxTiempoDeEntrega = max($maxTiempoDeEntrega, $producto['tiempoDeEntrega']);
-                    $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido, 'cliente comiendo', $tiempoDeEntrega);
+                    if ($producto['estado'] !== 'LISTO PARA SERVIR') {
+                        $todosListosParaServir = false;
+                        break;
+                    }
                 }
-                return $response->withStatus(200)->withJson(['mensaje' => 'Pedidos verificados y mesas servidas']);
+                if ($todosListosParaServir) {
+                    $this->pedidosDAO->cambiarEstadoPedidoyMesa($idPedido, 'cliente comiendo', $tiempoDeEntrega);
+                    return $response->withStatus(200)->withJson(['mensaje' => 'Pedidos verificados y mesas servidas']);
+                } else {
+                    return $response->withStatus(400)->withJson(['error' => 'No todos los productos están listos para servir']);
+                }
             } else {
                 return $response->withStatus(404)->withJson(['error' => 'No se encontraron productos listos para servir']);
             }
@@ -245,6 +257,7 @@ class PedidosController
             return $response->withStatus(500)->withJson(['error' => 'Error al verificar pedidos y servir mesas']);
         }
     }
+
     public function pagarPedido(ServerRequest $request, ResponseInterface $response)
     {
         $parametros = $request->getQueryParams();
