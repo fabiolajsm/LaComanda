@@ -13,9 +13,6 @@ require './dao/MesasDAO.php';
 require_once './controller/MesasController.php';
 require './dao/PedidosDAO.php';
 require_once './controller/PedidosController.php';
-require './middlewares/AuthMesaMiddleware.php';
-require './middlewares/AuthPedidoMiddleware.php';
-require './middlewares/AuthUsuarioMiddleware.php';
 require './middlewares/AuthTokenMiddleware.php';
 
 use Psr\Http\Message\ResponseInterface as Response;
@@ -48,10 +45,10 @@ $usuarioController = new UsuarioController($usuarioDAO);
 // Grupo de rutas para usuarios
 $app->group('/usuarios', function (RouteCollectorProxy $group) use ($usuarioController) {
     $group->get('[/]', [$usuarioController, 'listarUsuarios'])->add(\AuthTokenMiddleware::class . ":validarSocio");
-    $group->get('/traerUno', [$usuarioController, 'listarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
-    $group->post('[/]', [$usuarioController, 'altaUsuario'])->add(\AuthUsuarioMiddleware::class . ":validarSocio");
-    $group->put('[/]', [$usuarioController, 'modificarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocio");
-    $group->get('/borrar', [$usuarioController, 'borrarUsuarioPorId'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->get('/traerUno', [$usuarioController, 'listarUsuarioPorId'])->add(\AuthTokenMiddleware::class . ":validarSocio");
+    $group->post('[/]', [$usuarioController, 'altaUsuario'])->add(\AuthTokenMiddleware::class . ":validarSocio");
+    $group->put('[/]', [$usuarioController, 'modificarUsuarioPorId'])->add(\AuthTokenMiddleware::class . ":validarSocio");
+    $group->get('/borrar', [$usuarioController, 'borrarUsuarioPorId'])->add(\AuthTokenMiddleware::class . ":validarSocio");
     $group->get('/login', [$usuarioController, 'login']);
 });
 
@@ -66,21 +63,21 @@ $app->group('/productos', function (RouteCollectorProxy $group) use ($productoCo
     $group->post('/cargarCsv', [$productoController, 'cargarProductosDesdeCSV']);
     $group->get('/descargarCsv', [$productoController, 'descargarProductosComoCSV']);
     $group->get('/segunEmpleado', [$productoController, 'listarProductosSegunEmpleado']);
-    $group->put('/productoDelPedido', [$productoController, 'modificarProductoSegunEmpleado']);
+    $group->put('/productoDelPedido', [$productoController, 'modificarProductoSegunEmpleado'])->add(\AuthTokenMiddleware::class . ":validarEmpleado");
 });
 
 $mesasDAO = new MesasDAO($pdo);
 $mesasController = new MesasController($mesasDAO);
 // Grupo de rutas para mesas
 $app->group('/mesas', function (RouteCollectorProxy $group) use ($mesasController) {
-    $group->post('[/]', [$mesasController, 'crearMesa'])->add(\AuthMesaMiddleware::class . ":validarAltaMesa");
-    $group->get('[/]', [$mesasController, 'listarMesas'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
-    $group->put('[/]', [$mesasController, 'modificarEstadoMesa'])->add(\AuthMesaMiddleware::class . ":validarModificacionMesa");
-    $group->get('/borrar', [$mesasController, 'borrarMesa'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
-    $group->get('/cerrar', [$mesasController, 'cerrarMesa'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->post('[/]', [$mesasController, 'crearMesa'])->add(\AuthTokenMiddleware::class . ":validarSocio");
+    $group->get('[/]', [$mesasController, 'listarMesas'])->add(\AuthTokenMiddleware::class . ":validarSocio");
+    $group->put('[/]', [$mesasController, 'modificarEstadoMesa'])->add(\AuthTokenMiddleware::class . ":validarMozoOSocio");
+    $group->get('/borrar', [$mesasController, 'borrarMesa'])->add(\AuthTokenMiddleware::class . ":validarSocio");
+    $group->get('/cerrar', [$mesasController, 'cerrarMesa'])->add(\AuthTokenMiddleware::class . ":validarSocio");
     $group->post('/encuesta', [$mesasController, 'completarEncuesta']);
-    $group->get('/mejoresComentarios', [$mesasController, 'obtenerMejoresComentarios'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
-    $group->get('/mesaMasUsada', [$mesasController, 'obtenerMesaMasUsada'])->add(\AuthUsuarioMiddleware::class . ":validarSocioParametros");
+    $group->get('/mejoresComentarios', [$mesasController, 'obtenerMejoresComentarios'])->add(\AuthTokenMiddleware::class . ":validarSocio");
+    $group->get('/mesaMasUsada', [$mesasController, 'obtenerMesaMasUsada'])->add(\AuthTokenMiddleware::class . ":validarSocio");
 
 });
 
@@ -88,14 +85,14 @@ $pedidosDAO = new PedidosDAO($pdo);
 $pedidosController = new PedidosController($pedidosDAO);
 // Grupo de rutas para pedidos
 $app->group('/pedidos', function (RouteCollectorProxy $group) use ($pedidosController) {
-    $group->post('[/]', [$pedidosController, 'crearPedido'])->add(\AuthPedidoMiddleware::class . ":validarAltaPedido");
+    $group->post('[/]', [$pedidosController, 'crearPedido'])->add(\AuthTokenMiddleware::class . ":validarMozo");
     $group->get('[/]', [$pedidosController, 'listarPedidos']);
     $group->get('/productos', [$pedidosController, 'listarProductosEnPedidos']);
-    $group->get('/borrar', [$pedidosController, 'borrarPedidoPorId']);
-    $group->post('/modificar', [$pedidosController, 'modificarPedidoPorId']);
+    $group->get('/borrar', [$pedidosController, 'borrarPedidoPorId'])->add(\AuthTokenMiddleware::class . ":validarMozo");
+    $group->post('/modificar', [$pedidosController, 'modificarPedidoPorId'])->add(\AuthTokenMiddleware::class . ":validarMozo");
     $group->get('/verTiempoEspera', [$pedidosController, 'verTiempoEspera']);
-    $group->get('/consultarPedidosListosYServir', [$pedidosController, 'consultarPedidosListosYServir'])->add(\AuthMesaMiddleware::class . ":validarServirPedido");
-    $group->get('/pagarPedido', [$pedidosController, 'pagarPedido'])->add(\AuthMesaMiddleware::class . ":validarServirPedido");
+    $group->get('/consultarPedidosListosYServir', [$pedidosController, 'consultarPedidosListosYServir'])->add(\AuthTokenMiddleware::class . ":validarMozo");
+    $group->get('/pagarPedido', [$pedidosController, 'pagarPedido'])->add(\AuthTokenMiddleware::class . ":validarMozo");
 });
 
 $app->run();

@@ -3,6 +3,7 @@ use \Slim\Http\ServerRequest;
 use Psr\Http\Message\ResponseInterface;
 
 require_once './dao/ProductoDAO.php';
+require_once './utils/AutentificadorJWT.php';
 
 class ProductoController
 {
@@ -256,19 +257,29 @@ class ProductoController
     {
         $parametros = $request->getParsedBody();
 
-        $tipoEmpleado = $parametros['tipoEmpleado'] ?? null;
         $idPedido = $parametros['idPedido'] ?? null;
         $estado = $parametros['estado'] ?? null;
         $tiempoEntrega = $parametros['tiempoEntrega'] ?? null;
+        $header = $request->getHeaderLine('Authorization');
+        $token = null;
+        $cargo = null;
 
-        if ($tipoEmpleado == null || $idPedido == null || $estado == null || $tiempoEntrega == null) {
+        if (strpos($header, 'Bearer') !== false) {
+            $token = trim(explode("Bearer", $header)[1]);
+        }
+        if ($token !== null) {
+            $cargo = AutentificadorJWT::ObtenerCargo($token);
+        }
+        $tipoEmpleado = $cargo ? strtolower($cargo) : "null";
+
+        if ($idPedido == null || $estado == null || $tiempoEntrega == null) {
             return $response->withStatus(400)->withJson(['error' => 'Debe proporcionar el tipo de empleado, el ID del pedido, tiempo de entrega y el estado.']);
         }
         if ($tiempoEntrega !== null && (!is_numeric($tiempoEntrega) || $tiempoEntrega < 1)) {
             return $response->withStatus(400)->withJson(['error' => 'El tiempo de entrega debe estar expresado en minutos y ser un número válido mayor a 0.']);
         }
         $tiposPermitidos = ['bartender', 'cervecero', 'cocinero'];
-        $tipoEmpleado = strtolower($tipoEmpleado);
+
 
         if (!in_array($tipoEmpleado, $tiposPermitidos)) {
             return $response->withStatus(400)->withJson(['error' => 'Tipo de empleado incorrecto. Debe ser de tipo: bartender, cervecero, cocinero.']);

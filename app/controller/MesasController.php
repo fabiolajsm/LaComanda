@@ -154,7 +154,7 @@ class MesasController
             return $response->withStatus(404)->withJson(['error' => 'Pedido no encontrado']);
         }
         if ($mesaExistente['estado'] !== 'cerrado' || $pedidoExistente['estado'] !== 'cerrado') {
-            return $response->withStatus(404)->withJson(['error' => 'No puede completar la encuesta ya que ']);
+            return $response->withStatus(404)->withJson(['error' => 'No puede completar la encuesta ya que no se ha cerrado la mesa ni el pedido']);
         }
 
         $encuestaCompleta = $this->mesasDAO->completarEncuesta($codigoMesa, $idPedido, $pMesa, $pRestaurante, $pMozo, $pCocinero, $comentario);

@@ -135,11 +135,20 @@ class ProductoDAO
     public function modificarEstadoPedido($idPedido, $nuevoEstado, $idsProductos, $tiempoEntrega)
     {
         try {
-            $placeholders = str_repeat('?,', count($idsProductos) - 1) . '?';
-            $stmt = $this->pdo->prepare("UPDATE pedidos_productos SET estado = ?, tiempoDeEntrega = ? WHERE idPedido = ? AND idProducto IN ($placeholders)");
-            $stmtValues = array_merge([$nuevoEstado, $tiempoEntrega, $idPedido], $idsProductos);
-            $stmt->execute($stmtValues);
-            return true;
+            $stmtPedido = $this->pdo->prepare("SELECT estado FROM pedidos WHERE ID = ?");
+            $stmtPedido->execute([$idPedido]);
+            $estadoPedido = $stmtPedido->fetchColumn();
+
+            if ($estadoPedido !== 'cerrado') {
+                $placeholders = str_repeat('?,', count($idsProductos) - 1) . '?';
+                $stmt = $this->pdo->prepare("UPDATE pedidos_productos SET estado = ?, tiempoDeEntrega = ? WHERE idPedido = ? AND idProducto IN ($placeholders)");
+                $stmtValues = array_merge([$nuevoEstado, $tiempoEntrega, $idPedido], $idsProductos);
+                $stmt->execute($stmtValues);
+                return true;
+            } else {
+                echo 'No se puede modificar el estado. El pedido está cerrado.';
+                return false;
+            }
         } catch (PDOException $e) {
             echo 'Error al modificar el estado del pedido: ' . $e->getMessage();
             return false;

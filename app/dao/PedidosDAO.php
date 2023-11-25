@@ -256,18 +256,27 @@ class PedidosDAO
     public function pagarPedido($idPedido, $estado)
     {
         try {
-            $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = ? WHERE ID = ?");
-            $stmtPedido->execute([$estado, $idPedido]);
+            $stmtPedido = $this->pdo->prepare("SELECT estado FROM pedidos WHERE ID = ?");
+            $stmtPedido->execute([$idPedido]);
+            $estadoPedido = $stmtPedido->fetchColumn();
 
-            $stmtObtenerMesa = $this->pdo->prepare("SELECT codigoMesa FROM pedidos WHERE ID = ?");
-            $stmtObtenerMesa->execute([$idPedido]);
-            $codigoMesa = $stmtObtenerMesa->fetch(PDO::FETCH_COLUMN);
+            if ($estadoPedido !== 'cerrado') {
+                $stmtPedido = $this->pdo->prepare("UPDATE pedidos SET estado = ? WHERE ID = ?");
+                $stmtPedido->execute([$estado, $idPedido]);
 
-            if ($codigoMesa) {
-                $stmtMesa = $this->pdo->prepare("UPDATE mesas SET estado = ? WHERE codigo = ?");
-                $stmtMesa->execute([$estado, $codigoMesa]);
-                return true;
+                $stmtObtenerMesa = $this->pdo->prepare("SELECT codigoMesa FROM pedidos WHERE ID = ?");
+                $stmtObtenerMesa->execute([$idPedido]);
+                $codigoMesa = $stmtObtenerMesa->fetch(PDO::FETCH_COLUMN);
+
+                if ($codigoMesa) {
+                    $stmtMesa = $this->pdo->prepare("UPDATE mesas SET estado = ? WHERE codigo = ?");
+                    $stmtMesa->execute([$estado, $codigoMesa]);
+                    return true;
+                } else {
+                    return false;
+                }
             } else {
+                echo 'No se puede modificar el estado. El pedido está cerrado.';
                 return false;
             }
         } catch (PDOException $e) {

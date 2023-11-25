@@ -1,6 +1,7 @@
 <?php
 
 use Firebase\JWT\JWT;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class AutentificadorJWT
 {
@@ -60,6 +61,15 @@ class AutentificadorJWT
             self::$claveSecreta,
             self::$tipoEncriptacion
         )->data;
+    }
+
+    public static function ObtenerCargo($token)
+    {
+        return JWT::decode(
+            $token,
+            self::$claveSecreta,
+            self::$tipoEncriptacion
+        )->data->cargoEmpleado;
     }
 
     private static function Aud()
